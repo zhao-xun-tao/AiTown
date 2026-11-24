@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import ControlBar from './components/ControlBar.vue'
-import TownCanvas from './components/TownCanvas.vue'
+import TownPhaser from './components/TownPhaser.vue'
 import ObserverPanel from './components/ObserverPanel.vue'
 import { fetchWorldState, pauseSim, startSim, stepSim } from './api/sim'
 import { injectWorldEvent } from './api/events'
@@ -12,6 +12,7 @@ import type { SimStatus, WorldEvent, WorldState } from './types/world'
 /** 首屏立刻用骨架地图，避免干等「唤醒小镇」 */
 const world = ref<WorldState | null>(createSkeletonWorld())
 const selectedId = ref<string | null>('agent-linyue')
+const selectedBuildingId = ref<string | null>(null)
 const busy = ref(false)
 const errorMsg = ref('')
 const syncing = ref(true)
@@ -116,6 +117,12 @@ async function onInject(content: string) {
 
 function onSelect(id: string) {
   selectedId.value = id
+  selectedBuildingId.value = null
+}
+
+function onSelectBuilding(id: string | null) {
+  selectedBuildingId.value = id
+  if (id) selectedId.value = null
 }
 
 function onRetry() {
@@ -147,19 +154,23 @@ function onRetry() {
 
     <div class="body">
       <main class="stage">
-        <TownCanvas
+        <TownPhaser
           :world="world"
           :selected-id="selectedId"
+          :selected-building-id="selectedBuildingId"
           :syncing="syncing && !synced"
           @select="onSelect"
+          @select-building="onSelectBuilding"
         />
       </main>
       <ObserverPanel
         class="side"
         :world="world"
         :selected-id="selectedId"
+        :selected-building-id="selectedBuildingId"
         :observability-enabled="synced"
         @select="onSelect"
+        @select-building="onSelectBuilding"
       />
     </div>
   </div>
@@ -208,7 +219,7 @@ function onRetry() {
 .body {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr minmax(360px, 420px);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
   min-height: 0;
   background: var(--bg-deep);
 }
@@ -216,6 +227,9 @@ function onRetry() {
 .stage {
   min-width: 0;
   min-height: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .side {

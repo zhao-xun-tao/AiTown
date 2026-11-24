@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Agent, WorldState } from '../types/world'
+import type { Agent, Building, WorldState } from '../types/world'
 import { computed, nextTick, ref, watch } from 'vue'
 import {
   fetchAgentMemories,
@@ -16,21 +16,59 @@ import {
 const props = defineProps<{
   world: WorldState | null
   selectedId: string | null
+  selectedBuildingId?: string | null
   /** 后端已同步前不打记忆/CoT 接口，避免空等拖慢首屏 */
   observabilityEnabled?: boolean
 }>()
 
 const emit = defineEmits<{
   select: [id: string]
+  selectBuilding: [id: string | null]
 }>()
 
-type TabKey = 'profile' | 'cot' | 'memory' | 'relation'
+type TabKey = 'profile' | 'cot' | 'memory' | 'relation' | 'building'
 
 const tab = ref<TabKey>('cot')
 const selected = computed<Agent | null>(() => {
   if (!props.world || !props.selectedId) return null
   return props.world.agents.find((a) => a.id === props.selectedId) ?? null
 })
+
+const selectedBuilding = computed<Building | null>(() => {
+  if (!props.world || !props.selectedBuildingId) return null
+  return props.world.buildings.find((b) => b.id === props.selectedBuildingId) ?? null
+})
+
+/** 当前建筑内/占地内的角色 */
+const agentsInBuilding = computed(() => {
+  const b = selectedBuilding.value
+  if (!b || !props.world) return []
+  return props.world.agents.filter(
+    (a) => a.x >= b.x && a.x < b.x + b.width && a.y >= b.y && a.y < b.y + b.height,
+  )
+})
+
+const buildingSpeeches = computed(() => {
+  const b = selectedBuilding.value
+  if (!b || !props.world?.recentSpeeches) return []
+  return props.world.recentSpeeches.filter(
+    (s) => s.x >= b.x && s.x < b.x + b.width && s.y >= b.y && s.y < b.y + b.height,
+  )
+})
+
+watch(
+  () => props.selectedBuildingId,
+  (id) => {
+    if (id) tab.value = 'building'
+  },
+)
+
+watch(
+  () => props.selectedId,
+  (id) => {
+    if (id && tab.value === 'building') tab.value = 'cot'
+  },
+)
 
 const working = ref<WorkingMemoryDto[]>([])
 const longTerm = ref<LongTermMemoryDto[]>([])
@@ -98,8 +136,39 @@ function favorColor(v: number) {
   <aside class="panel">
     <div class="panel-head">
       <h2>科研观察面板</h2>
-      <p class="hint">点击地图居民 · 实时 CoT · 记忆流 · 关系图谱</p>
+      <p class="hint">点角色看 CoT · 点建筑看在场居民与事件</p>
     </div>
+
+    <section v-if="selectedBuilding" class="section building-box">
+      <h3>选中建筑</h3>
+      <div class="building-card">
+        <div class="profile-name">{{ selectedBuilding.name }}</div>
+        <div class="profile-role">{{ selectedBuilding.type }} · ({{ selectedBuilding.x }},{{ selectedBuilding.y }})</div>
+        <div class="row block">
+          <span class="label">在场角色</span>
+          <ul v-if="agentsInBuilding.length" class="step-list">
+            <li
+              v-for="a in agentsInBuilding"
+              :key="a.id"
+              class="clickable"
+              @click="emit('select', a.id)"
+            >
+              {{ a.name }} · {{ a.state }} · {{ a.bubble }}
+            </li>
+          </ul>
+          <span v-else class="muted">（暂无）</span>
+        </div>
+        <div class="row block">
+          <span class="label">近期发言</span>
+          <ul v-if="buildingSpeeches.length" class="step-list">
+            <li v-for="(s, i) in buildingSpeeches" :key="i">
+              {{ s.speakerName }}：{{ s.speech }}
+            </li>
+          </ul>
+          <span v-else class="muted">（暂无）</span>
+        </div>
+      </div>
+    </section>
 
     <section class="section">
       <h3>居民</h3>
@@ -150,6 +219,16 @@ function favorColor(v: number) {
             <div class="row">
               <span class="label">动作</span>
               <span class="mono">{{ selected.lastAction || '—' }}</span>
+            </div>
+            <div class="row">
+              <span class="label">目标格</span>
+              <span class="mono"
+                >({{ selected.targetX ?? selected.x }}, {{ selected.targetY ?? selected.y }})</span
+              >
+            </div>
+            <div class="row">
+              <span class="label">剩余路径</span>
+              <span class="mono">{{ selected.path?.length ?? 0 }} 点</span>
             </div>
             <div class="row block">
               <span class="label">气泡</span>
@@ -697,5 +776,26 @@ h4.mt {
   padding-left: 16px;
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.building-box {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.building-card {
+  padding: 8px 10px;
+  background: rgba(40, 55, 42, 0.45);
+  border: 1px solid var(--border);
+}
+
+.clickable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.clickable:hover {
+  color: var(--accent-strong);
 }
 </style>

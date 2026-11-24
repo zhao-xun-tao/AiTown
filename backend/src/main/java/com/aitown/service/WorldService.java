@@ -6,6 +6,7 @@ import com.aitown.engine.AreaEventBus;
 import com.aitown.model.Agent;
 import com.aitown.model.Building;
 import com.aitown.model.GameTime;
+import com.aitown.model.GridPoint;
 import com.aitown.model.SimStatus;
 import com.aitown.model.WorldEvent;
 import com.aitown.model.WorldState;
@@ -135,6 +136,12 @@ public class WorldService {
     private List<Agent> copyAgents() {
         List<Agent> copy = new ArrayList<>(agents.size());
         for (Agent a : agents) {
+            List<GridPoint> pathCopy = new ArrayList<>();
+            if (a.getPath() != null) {
+                for (GridPoint p : a.getPath()) {
+                    pathCopy.add(GridPoint.builder().x(p.getX()).y(p.getY()).build());
+                }
+            }
             copy.add(Agent.builder()
                     .id(a.getId())
                     .name(a.getName())
@@ -150,6 +157,9 @@ public class WorldService {
                     .lastError(a.getLastError())
                     .retrievedMemorySummary(a.getRetrievedMemorySummary())
                     .color(a.getColor())
+                    .targetX(a.getTargetX())
+                    .targetY(a.getTargetY())
+                    .path(pathCopy)
                     .build());
         }
         return copy;

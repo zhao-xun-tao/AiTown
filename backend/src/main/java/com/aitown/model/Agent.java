@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * AI 居民（Agent）运行时档案。
  * Phase 1 仅内存持有；后续会持久化到 MySQL，并把坐标/短期记忆放到 Redis。
@@ -55,4 +58,16 @@ public class Agent {
 
     /** 渲染用颜色（前端 Canvas） */
     private String color;
+
+    /** 当前寻路最终目标格 X（无移动时可为当前位置） */
+    private Integer targetX;
+
+    /** 当前寻路最终目标格 Y */
+    private Integer targetY;
+
+    /**
+     * 剩余路径路点（不含当前格）。后端 A* 生成；前端插值与局部重寻路。
+     */
+    @Builder.Default
+    private List<GridPoint> path = new ArrayList<>();
 }

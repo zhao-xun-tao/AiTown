@@ -23,6 +23,11 @@ export interface Building {
   height: number
 }
 
+export interface GridPoint {
+  x: number
+  y: number
+}
+
 export interface Agent {
   id: string
   name: string
@@ -38,6 +43,11 @@ export interface Agent {
   lastError?: string | null
   retrievedMemorySummary?: string | null
   color: string
+  /** 寻路最终目标 */
+  targetX?: number | null
+  targetY?: number | null
+  /** 后端 A* 剩余路点（不含当前格） */
+  path?: GridPoint[] | null
 }
 
 export interface AreaSpeechEvent {

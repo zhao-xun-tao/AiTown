@@ -6,13 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets": "tsx scripts/generate-assets.ts"
   },
   "dependencies": {
+    "phaser": "3.80.1",
     "vue": "^3.4.27"
   },
   "devDependencies": {
+    "@types/pngjs": "^6.0.5",
     "@vitejs/plugin-vue": "^5.0.4",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.23.15",
     "typescript": "~5.4.5",
     "vite": "^5.2.11",
     "vue-tsc": "^2.0.19"
