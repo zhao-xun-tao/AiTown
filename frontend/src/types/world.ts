@@ -1,0 +1,75 @@
+/** 与后端 WorldState 对齐的前端类型定义 */
+
+export type ZoneType = 'ROAD' | 'PLAZA' | 'CAFE' | 'LIBRARY' | 'PARK' | 'HOUSE'
+
+export type AgentState =
+  | 'IDLE'
+  | 'WALKING'
+  | 'WORKING'
+  | 'READING'
+  | 'WRITING'
+  | 'CHATTING'
+  | 'RESTING'
+
+export type SimStatus = 'PAUSED' | 'RUNNING'
+
+export interface Building {
+  id: string
+  name: string
+  type: ZoneType
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface Agent {
+  id: string
+  name: string
+  role: string
+  persona: string
+  x: number
+  y: number
+  state: AgentState
+  bubble: string
+  lastThought: string
+  lastAction?: string
+  lastSpeech?: string | null
+  lastError?: string | null
+  color: string
+}
+
+export interface AreaSpeechEvent {
+  tick: number
+  areaKey: string
+  areaName: string
+  speakerId: string
+  speakerName: string
+  targetAgentName?: string | null
+  speech: string
+  x: number
+  y: number
+}
+
+export interface GameTime {
+  day: number
+  hour: number
+  minute: number
+  tick: number
+}
+
+export interface WorldState {
+  mapSize: number
+  buildings: Building[]
+  agents: Agent[]
+  recentSpeeches?: AreaSpeechEvent[]
+  gameTime: GameTime
+  simStatus: SimStatus
+  timeDisplay: string
+}
+
+export interface ApiResult<T> {
+  code: number
+  message: string
+  data: T
+}

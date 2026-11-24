@@ -1,0 +1,36 @@
+:root {
+  --bg-deep: #1a1f24;
+  --bg-panel: #232a31;
+  --bg-elevated: #2c353e;
+  --border: #3a4550;
+  --text: #e8eef2;
+  --text-muted: #9aa8b5;
+  --accent: #5b9fd4;
+  --accent-dim: #3d7aab;
+  --success: #6fbf73;
+  --warn: #e0a45f;
+  --danger: #d96b6b;
+  --font-ui: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}

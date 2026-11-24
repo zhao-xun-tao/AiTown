@@ -1,0 +1,35 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: ai-town-backend
+
+# 模拟世界配置
+aitown:
+  # LLM 模式下建议 ≥ 5000；3 个 Agent 串行调用可能较慢
+  tick-interval-ms: 5000
+  minutes-per-tick: 10
+  start-hour: 8
+  start-minute: 0
+
+# OpenAI 兼容大模型（也可换成国内兼容网关）
+# 启用前请设置环境变量 LLM_API_KEY，或直接填写 api-key
+llm:
+  enabled: true
+  base-url: https://api.openai.com/v1
+  api-key: ${LLM_API_KEY:}
+  model: gpt-4o-mini
+  timeout-ms: 15000
+  temperature: 0.7
+  max-tokens: 512
+  # 感知附近 Agent 的曼哈顿距离
+  perception-radius: 3
+
+logging:
+  level:
+    com.aitown: INFO
