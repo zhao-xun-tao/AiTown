@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * OpenAI 兼容 Chat Completions HTTP 客户端。
- * 支持任意提供 base-url + api-key + model 的兼容网关。
+ * 默认对接阿里百炼 DashScope（compatible-mode），也可换其它兼容网关。
  */
 @Slf4j
 @Component
@@ -114,7 +114,7 @@ public class LlmClient {
 
     private static String normalizeBaseUrl(String baseUrl) {
         if (baseUrl == null || baseUrl.isBlank()) {
-            return "https://api.openai.com/v1";
+            return "https://dashscope.aliyuncs.com/compatible-mode/v1";
         }
         String trimmed = baseUrl.trim();
         while (trimmed.endsWith("/")) {

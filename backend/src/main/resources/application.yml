@@ -41,13 +41,16 @@ aitown:
   start-hour: 8
   start-minute: 0
 
-# OpenAI 兼容大模型
+# 阿里百炼（DashScope OpenAI 兼容模式）
+# 控制台：https://bailian.console.aliyun.com/ → API-KEY
+# 文档：https://help.aliyun.com/zh/model-studio/developer-reference/compatibility-of-openai-with-dashscope
 llm:
   enabled: true
-  base-url: https://api.openai.com/v1
-  api-key: ${LLM_API_KEY:}
-  model: gpt-4o-mini
-  timeout-ms: 15000
+  base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  api-key: ${DASHSCOPE_API_KEY:${LLM_API_KEY:sk-ws-H.XMYERER.rie8.MEQCIB0o0RQDT6myOju9dEHB56XEOL7LVDxth8lt32yen9coAiAt4HP2XSkjjrChH5WYSJRyZXk4-nMpLLkseUCqHn2L4Q}}
+  # 常用：qwen-turbo / qwen-plus / qwen-max
+  model: qwen4-max
+  timeout-ms: 30000
   temperature: 0.7
   max-tokens: 800
   perception-radius: 3

@@ -24,7 +24,7 @@ game/
 
 - JDK 17+、Maven 3.8+、Node.js 18+
 - Docker（推荐，用于 MySQL / Redis）
-- OpenAI 兼容 API Key（可选；无 Key 时降级 Mock）
+- 阿里百炼 API Key（可选；无 Key 时降级 Mock）
 
 ## 启动步骤
 
@@ -40,8 +40,8 @@ docker compose up -d
 
 ```bash
 cd backend
-# PowerShell 示例
-$env:LLM_API_KEY="sk-..."
+# PowerShell 示例（阿里百炼 API-KEY）
+$env:DASHSCOPE_API_KEY="sk-..."
 mvn spring-boot:run
 ```
 
@@ -102,26 +102,22 @@ npm run dev
 ## 配置摘要
 
 ```yaml
+# 阿里百炼 DashScope OpenAI 兼容模式
+llm:
+  enabled: true
+  base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  api-key: ${DASHSCOPE_API_KEY:}
+  model: qwen-plus          # 也可 qwen-turbo / qwen-max
+  timeout-ms: 30000
+
 memory:
   enabled: true
   working-memory-size: 10
   retrieve-top-k: 5
   reflection-importance-threshold: 30
-  weight-recency: 1.0
-  weight-importance: 1.0
-  weight-relevance: 1.0
-  recency-decay-lambda: 0.995
-
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/aitown?...
-    username: aitown
-    password: aitown
-  data:
-    redis:
-      host: localhost
-      port: 6379
 ```
+
+API-KEY 在 [百炼控制台](https://bailian.console.aliyun.com/) 创建。
 
 ## 初始居民
 
