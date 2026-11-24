@@ -50,6 +50,9 @@ public class Agent {
     /** 最近一次决策错误（超时 / JSON 损坏等），正常时为 null */
     private String lastError;
 
+    /** 本 Tick 检索到的长期记忆摘要（研究可观测性） */
+    private String retrievedMemorySummary;
+
     /** 渲染用颜色（前端 Canvas） */
     private String color;
 }

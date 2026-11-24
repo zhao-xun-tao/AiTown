@@ -7,6 +7,7 @@ import com.aitown.model.Building;
 import com.aitown.model.GameTime;
 import com.aitown.model.NearbyAgentInfo;
 import com.aitown.model.PerceptionContext;
+import com.aitown.observability.WorldEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class PerceptionService {
 
     private final LlmProperties llmProperties;
     private final AreaEventBus areaEventBus;
+    private final WorldEventService worldEventService;
 
     public PerceptionContext build(
             Agent self,
@@ -88,6 +90,7 @@ public class PerceptionService {
                 .nearbyAgents(nearby)
                 .nearbySpeeches(speeches)
                 .knownLocations(new ArrayList<>(locations))
+                .worldEvents(new ArrayList<>(worldEventService.getActiveEvents()))
                 .build();
     }
 

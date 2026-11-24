@@ -36,6 +36,7 @@ export interface Agent {
   lastAction?: string
   lastSpeech?: string | null
   lastError?: string | null
+  retrievedMemorySummary?: string | null
   color: string
 }
 
@@ -58,11 +59,21 @@ export interface GameTime {
   tick: number
 }
 
+export interface WorldEvent {
+  id: string
+  content: string
+  createdTick: number
+  createdTimeDisplay: string
+  remainingTicks: number
+  durationTicks: number
+}
+
 export interface WorldState {
   mapSize: number
   buildings: Building[]
   agents: Agent[]
   recentSpeeches?: AreaSpeechEvent[]
+  activeWorldEvents?: WorldEvent[]
   gameTime: GameTime
   simStatus: SimStatus
   timeDisplay: string

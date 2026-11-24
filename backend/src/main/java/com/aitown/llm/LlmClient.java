@@ -29,11 +29,15 @@ public class LlmClient {
     private final LlmProperties properties;
     private final ObjectMapper objectMapper;
 
-    /**
-     * 发送一轮对话，返回 assistant 文本内容。
-     * 超时或 HTTP 错误抛出 {@link LlmException}，由上层降级为 IDLE。
-     */
+    /** 兼容旧调用：只取文本 */
     public String chat(String systemPrompt, String userPrompt) {
+        return chatDetailed(systemPrompt, userPrompt).getContent();
+    }
+
+    /**
+     * 发送一轮对话，返回内容 + 耗时 + Token（若网关提供 usage）。
+     */
+    public LlmCallResult chatDetailed(String systemPrompt, String userPrompt) {
         if (properties.getApiKey() == null || properties.getApiKey().isBlank()) {
             throw new LlmException("llm.api-key 未配置");
         }
@@ -50,6 +54,7 @@ public class LlmClient {
                 ))
                 .build();
 
+        long start = System.currentTimeMillis();
         try {
             String json = objectMapper.writeValueAsString(body);
             HttpClient client = HttpClient.newBuilder()
@@ -66,6 +71,7 @@ public class LlmClient {
 
             log.debug("调用 LLM: model={}, url={}", properties.getModel(), url);
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            long latency = System.currentTimeMillis() - start;
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new LlmException("LLM HTTP " + response.statusCode() + ": " + truncate(response.body()));
@@ -76,7 +82,24 @@ public class LlmClient {
             if (content == null || content.isBlank()) {
                 throw new LlmException("LLM 返回空 content");
             }
-            return content;
+
+            Integer promptTokens = null;
+            Integer completionTokens = null;
+            Integer totalTokens = null;
+            if (parsed.getUsage() != null) {
+                promptTokens = parsed.getUsage().getPromptTokens();
+                completionTokens = parsed.getUsage().getCompletionTokens();
+                totalTokens = parsed.getUsage().getTotalTokens();
+            }
+
+            return LlmCallResult.builder()
+                    .content(content)
+                    .latencyMs(latency)
+                    .promptTokens(promptTokens)
+                    .completionTokens(completionTokens)
+                    .totalTokens(totalTokens)
+                    .model(properties.getModel())
+                    .build();
         } catch (LlmException e) {
             throw e;
         } catch (java.net.http.HttpTimeoutException e) {

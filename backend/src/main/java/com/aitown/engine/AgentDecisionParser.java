@@ -37,6 +37,12 @@ public class AgentDecisionParser {
             decision.setTargetLocation(blankToNull(decision.getTargetLocation()));
             decision.setTargetAgent(blankToNull(decision.getTargetAgent()));
             decision.setSpeech(blankToNull(decision.getSpeech()));
+            decision.setMemoryNote(blankToNull(decision.getMemoryNote()));
+            decision.setMemoryType(blankToNull(decision.getMemoryType()));
+            if (decision.getMemoryImportance() != null) {
+                int imp = decision.getMemoryImportance();
+                decision.setMemoryImportance(Math.max(1, Math.min(10, imp)));
+            }
             if (decision.getThought() == null || decision.getThought().isBlank()) {
                 decision.setThought("（无内心独白）");
             }
@@ -50,7 +56,7 @@ public class AgentDecisionParser {
     /**
      * 提取第一个完整的 {...} 对象（简单括号计数，足够处理常见 LLM 输出）。
      */
-    static String extractJsonObject(String text) {
+    public static String extractJsonObject(String text) {
         // 去掉 ```json ... ``` 包裹
         String cleaned = text;
         if (cleaned.contains("```")) {

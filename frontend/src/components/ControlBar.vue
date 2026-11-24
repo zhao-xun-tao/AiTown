@@ -1,67 +1,105 @@
 <script setup lang="ts">
-import type { SimStatus } from '../types/world'
+import { ref } from 'vue'
+import type { SimStatus, WorldEvent } from '../types/world'
 
 defineProps<{
   timeDisplay: string
   simStatus: SimStatus
   connected: boolean
   busy: boolean
+  activeEvents: WorldEvent[]
 }>()
 
 const emit = defineEmits<{
   start: []
   pause: []
   step: []
+  inject: [content: string]
 }>()
+
+const eventText = ref('')
+
+function sendEvent() {
+  const t = eventText.value.trim()
+  if (!t) return
+  emit('inject', t)
+  eventText.value = ''
+}
 </script>
 
 <template>
-  <header class="bar">
-    <div class="brand">
-      <span class="brand-mark">AI Town</span>
-      <span class="brand-sub">多智能体社会模拟沙盒</span>
+  <header class="bar-wrap">
+    <div class="bar">
+      <div class="brand">
+        <span class="brand-mark">AI Town</span>
+        <span class="brand-sub">多智能体社会模拟沙盒</span>
+      </div>
+
+      <div class="clock">
+        <span class="clock-label">世界时间</span>
+        <span class="clock-value">{{ timeDisplay || '—' }}</span>
+        <span class="pill" :class="simStatus === 'RUNNING' ? 'pill-run' : 'pill-pause'">
+          {{ simStatus === 'RUNNING' ? '运行中' : '已暂停' }}
+        </span>
+        <span class="pill" :class="connected ? 'pill-ok' : 'pill-off'">
+          {{ connected ? 'WS 已连接' : 'WS 断开' }}
+        </span>
+      </div>
+
+      <div class="actions">
+        <button
+          class="btn btn-primary"
+          :disabled="busy || simStatus === 'RUNNING'"
+          @click="emit('start')"
+        >
+          开始
+        </button>
+        <button
+          class="btn"
+          :disabled="busy || simStatus !== 'RUNNING'"
+          @click="emit('pause')"
+        >
+          暂停
+        </button>
+        <button class="btn" :disabled="busy" @click="emit('step')">单步</button>
+      </div>
     </div>
 
-    <div class="clock">
-      <span class="clock-label">世界时间</span>
-      <span class="clock-value">{{ timeDisplay || '—' }}</span>
-      <span class="pill" :class="simStatus === 'RUNNING' ? 'pill-run' : 'pill-pause'">
-        {{ simStatus === 'RUNNING' ? '运行中' : '已暂停' }}
-      </span>
-      <span class="pill" :class="connected ? 'pill-ok' : 'pill-off'">
-        {{ connected ? 'WS 已连接' : 'WS 断开' }}
-      </span>
-    </div>
-
-    <div class="actions">
-      <button
-        class="btn btn-primary"
-        :disabled="busy || simStatus === 'RUNNING'"
-        @click="emit('start')"
-      >
-        开始
+    <div class="god-row">
+      <span class="god-label">God Mode</span>
+      <input
+        v-model="eventText"
+        class="god-input"
+        type="text"
+        placeholder="投放世界事件，例如：咖啡馆突然宣布今天所有饮品免费"
+        :disabled="busy"
+        @keyup.enter="sendEvent"
+      />
+      <button class="btn btn-god" :disabled="busy || !eventText.trim()" @click="sendEvent">
+        发送
       </button>
-      <button
-        class="btn"
-        :disabled="busy || simStatus !== 'RUNNING'"
-        @click="emit('pause')"
-      >
-        暂停
-      </button>
-      <button class="btn" :disabled="busy" @click="emit('step')">单步</button>
+      <div v-if="activeEvents?.length" class="god-active">
+        <span v-for="ev in activeEvents" :key="ev.id" class="event-chip" :title="ev.content">
+          {{ ev.content.length > 18 ? ev.content.slice(0, 18) + '…' : ev.content }}
+          <em>{{ ev.remainingTicks }}T</em>
+        </span>
+      </div>
     </div>
   </header>
 </template>
 
 <style scoped>
+.bar-wrap {
+  background: linear-gradient(180deg, #2a333c 0%, var(--bg-panel) 100%);
+  border-bottom: 1px solid var(--border);
+}
+
 .bar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 16px;
-  padding: 12px 20px;
-  background: linear-gradient(180deg, #2a333c 0%, var(--bg-panel) 100%);
-  border-bottom: 1px solid var(--border);
+  padding: 12px 20px 8px;
 }
 
 .brand {
@@ -163,6 +201,67 @@ const emit = defineEmits<{
 .btn-primary:hover:not(:disabled) {
   background: var(--accent);
   color: #0f1418;
+}
+
+.god-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px 12px;
+  flex-wrap: wrap;
+}
+
+.god-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+.god-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: #1b2228;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.god-input:focus {
+  border-color: var(--warn);
+}
+
+.btn-god {
+  background: #6a4a2a;
+  border-color: var(--warn);
+  color: #f0d9b5;
+}
+
+.god-active {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.event-chip {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  background: #3a2e1f;
+  border: 1px solid #8a6a3a;
+  color: #e8d4b0;
+}
+
+.event-chip em {
+  font-style: normal;
+  margin-left: 6px;
+  opacity: 0.7;
+  font-family: var(--font-mono);
 }
 
 @media (max-width: 900px) {

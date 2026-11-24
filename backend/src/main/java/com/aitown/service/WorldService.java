@@ -7,7 +7,10 @@ import com.aitown.model.Agent;
 import com.aitown.model.Building;
 import com.aitown.model.GameTime;
 import com.aitown.model.SimStatus;
+import com.aitown.model.WorldEvent;
 import com.aitown.model.WorldState;
+import com.aitown.observability.RelationshipService;
+import com.aitown.observability.WorldEventService;
 import com.aitown.websocket.WorldWebSocketHandler;
 import com.aitown.world.AgentFactory;
 import com.aitown.world.TownMapFactory;
@@ -21,9 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 世界状态中枢：持有地图、居民、时钟，并在 Tick 时驱动 Agent 决策与广播。
- * <p>
- * Phase 1 使用进程内内存；后续可将快照写入 Redis，档案/记忆流写入 MySQL。
+ * 世界状态中枢：地图、居民、时钟、上帝事件，并驱动决策与广播。
  */
 @Slf4j
 @Service
@@ -33,6 +34,8 @@ public class WorldService {
     private final AiTownProperties properties;
     private final AgentDecisionService agentDecisionService;
     private final AreaEventBus areaEventBus;
+    private final WorldEventService worldEventService;
+    private final RelationshipService relationshipService;
     private final WorldWebSocketHandler webSocketHandler;
 
     private final List<Building> buildings = new ArrayList<>();
@@ -49,6 +52,7 @@ public class WorldService {
         agents.addAll(AgentFactory.createInitialAgents());
 
         areaEventBus.clear();
+        relationshipService.ensureInitialized(agents);
 
         gameTime = GameTime.builder()
                 .day(1)
@@ -68,6 +72,7 @@ public class WorldService {
                 .buildings(Collections.unmodifiableList(new ArrayList<>(buildings)))
                 .agents(Collections.unmodifiableList(copyAgents()))
                 .recentSpeeches(Collections.unmodifiableList(new ArrayList<>(areaEventBus.getPerceptibleEvents())))
+                .activeWorldEvents(Collections.unmodifiableList(new ArrayList<>(worldEventService.getActiveEvents())))
                 .gameTime(copyTime())
                 .simStatus(simStatus)
                 .timeDisplay(gameTime.format())
@@ -84,31 +89,42 @@ public class WorldService {
         broadcastSnapshot();
     }
 
-    /**
-     * 执行一次世界 Tick：推进时钟 → 各 Agent 感知/决策/执行 → 固化区域对话 → 广播。
-     */
+    public synchronized GameTime currentTime() {
+        return copyTime();
+    }
+
+    public List<Agent> getAgents() {
+        return Collections.unmodifiableList(agents);
+    }
+
+    /** 上帝视角投放世界事件，并立即广播 */
+    public synchronized WorldEvent injectWorldEvent(String content, Integer durationTicks) {
+        int dur = durationTicks == null ? WorldEventService.DEFAULT_DURATION_TICKS : durationTicks;
+        WorldEvent event = worldEventService.inject(content, gameTime, dur);
+        broadcastSnapshot();
+        return event;
+    }
+
     public synchronized WorldState tick() {
         gameTime.advanceMinutes(properties.getMinutesPerTick());
 
-        // 依次决策：同 Tick 内互不影响感知（对话要等下一 Tick 才可听）
         for (Agent agent : agents) {
             try {
                 agentDecisionService.decideAndAct(agent, agents, buildings, gameTime);
             } catch (Exception e) {
-                // 单 Agent 异常绝不能打断整个模拟循环
                 log.error("Agent {} Tick 执行异常，已跳过", agent.getName(), e);
                 agent.setLastError(e.getMessage());
                 agent.setLastAction("IDLE");
             }
         }
 
-        // 将本 Tick 产生的对话推进为「下一 Tick 可感知」
         areaEventBus.advanceTick();
+        worldEventService.onTickEnd();
 
         WorldState state = snapshot();
         webSocketHandler.broadcast(state);
-        log.info("Tick #{} 完成，时间={}，可感知对话数={}",
-                gameTime.getTick(), gameTime.format(), areaEventBus.getPerceptibleEvents().size());
+        log.info("Tick #{} 完成，时间={}，活跃世界事件={}",
+                gameTime.getTick(), gameTime.format(), worldEventService.getActiveEvents().size());
         return state;
     }
 
@@ -132,6 +148,7 @@ public class WorldService {
                     .lastAction(a.getLastAction())
                     .lastSpeech(a.getLastSpeech())
                     .lastError(a.getLastError())
+                    .retrievedMemorySummary(a.getRetrievedMemorySummary())
                     .color(a.getColor())
                     .build());
         }

@@ -40,4 +40,8 @@ public class PerceptionContext {
     /** 可选目标地点清单，约束 LLM 的 targetLocation */
     @Builder.Default
     private List<String> knownLocations = new ArrayList<>();
+
+    /** 上帝视角投放的全局世界事件（当前仍生效） */
+    @Builder.Default
+    private List<WorldEvent> worldEvents = new ArrayList<>();
 }

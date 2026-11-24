@@ -1,42 +1,52 @@
 # AI Town · 多智能体社会模拟沙盒
 
-用于 AI 游戏研究的 Web 端 Generative Agents 沙盒。当前已跑通 **世界时钟 + Canvas + LLM 自主决策闭环**（OpenAI 兼容接口）；MySQL / Redis 仍待后续接入。
+用于 AI 游戏研究的 Web 端 Generative Agents 沙盒。已实现：**世界时钟 + Canvas + LLM 决策 + 双层记忆 + 检索/反思 + 科研观察面板（CoT / 记忆 / 关系）+ God Mode 世界事件**。
 
 ## 技术栈
 
 | 端 | 技术 |
 |---|---|
-| 后端 | Java 17、Spring Boot 3.2、WebSocket |
+| 后端 | Java 17、Spring Boot 3.2、WebSocket、MyBatis-Plus、MySQL 8、Redis |
 | 前端 | Vue 3、TypeScript、Vite、HTML5 Canvas 2D |
 
 ## 目录结构
 
 ```
 game/
-├── backend/          # Spring Boot 服务（默认端口 8080）
-├── frontend/         # Vue3 研究工作台（默认端口 5173）
+├── docker-compose.yml   # MySQL + Redis
+├── backend/
+├── frontend/
 ├── .cursorrules
 └── README.md
 ```
 
 ## 环境要求
 
-- JDK 17+
-- Maven 3.8+（或使用 IDE 内置 Maven）
-- Node.js 18+ / npm
+- JDK 17+、Maven 3.8+、Node.js 18+
+- Docker（推荐，用于 MySQL / Redis）
+- OpenAI 兼容 API Key（可选；无 Key 时降级 Mock）
 
 ## 启动步骤
+
+### 0. 启动基础设施
+
+```bash
+docker compose up -d
+```
+
+等待 MySQL / Redis healthy 后继续。
 
 ### 1. 启动后端
 
 ```bash
 cd backend
+# PowerShell 示例
+$env:LLM_API_KEY="sk-..."
 mvn spring-boot:run
 ```
 
-启动成功后可验证：
-
 - REST：`http://localhost:8080/api/world/state`
+- 记忆：`http://localhost:8080/api/agents/{agentId}/memories`
 - WebSocket：`ws://localhost:8080/ws/world`
 
 ### 2. 启动前端
@@ -47,31 +57,70 @@ npm install
 npm run dev
 ```
 
-浏览器打开：`http://localhost:5173`
+浏览器：`http://localhost:5173`
 
-### 3. 操作说明
+## 双层记忆（Generative Agents）
 
-1. 顶部查看**世界时间**与 WS 连接状态  
-2. 点击 **开始**：每 **2 秒**自动推进 1 Tick（游戏内 +10 分钟）  
-3. **暂停**停止自动推进  
-4. **单步**手动推进 1 Tick  
-5. 点击地图居民或右侧列表，查看人设 / 气泡 / Mock 思考  
+| 层 | 存储 | 作用 |
+|---|---|---|
+| 短期工作记忆 | Redis List，最近 10 条 | 每次决策自动带入 Prompt |
+| 长期记忆流 | MySQL `agent_memory` | 观察 / 对话 / 反思，含重要性 1-10 |
+| 检索 | 时间衰减 + 重要性 + 关键词相关 | Top-5 注入 Prompt |
+| 反思 | 累计重要性 ≥ 30 | LLM 提炼高层次认知写回 REFLECTION |
+
+决策 JSON 额外字段：
+
+```json
+{
+  "thought": "...",
+  "action": "MOVE | TALK | IDLE",
+  "targetLocation": "...",
+  "targetAgent": "...",
+  "speech": "...",
+  "memoryNote": "本回合写入长期记忆的一句话",
+  "memoryImportance": 5,
+  "memoryType": "OBSERVATION | DIALOGUE"
+}
+```
 
 ## API 一览
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/world/state` | 完整世界快照 |
-| POST | `/api/sim/start` | 开始自动 Tick |
+| GET | `/api/world/state` | 世界快照 |
+| POST | `/api/sim/start` | 开始 |
 | POST | `/api/sim/pause` | 暂停 |
-| POST | `/api/sim/step` | 单步推进 |
-| GET | `/api/sim/status` | 引擎状态 |
-| WS | `/ws/world` | 每 Tick 广播 `WorldState` JSON |
+| POST | `/api/sim/step` | 单步 |
+| GET | `/api/sim/status` | 状态 |
+| GET | `/api/agents/{id}/memories` | 短期+长期记忆 |
+| GET | `/api/agents/{id}/cot` | 思维链回合日志 |
+| GET | `/api/agents/{id}/relations` | 好感度/印象图谱 |
+| POST | `/api/world/events` | 上帝视角投放世界事件 |
+| GET | `/api/world/events` | 活跃/历史世界事件 |
+| WS | `/ws/world` | Tick 广播 |
 
-所有 REST 响应统一为：
+## 配置摘要
 
-```json
-{ "code": 0, "message": "success", "data": { ... } }
+```yaml
+memory:
+  enabled: true
+  working-memory-size: 10
+  retrieve-top-k: 5
+  reflection-importance-threshold: 30
+  weight-recency: 1.0
+  weight-importance: 1.0
+  weight-relevance: 1.0
+  recency-decay-lambda: 0.995
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/aitown?...
+    username: aitown
+    password: aitown
+  data:
+    redis:
+      host: localhost
+      port: 6379
 ```
 
 ## 初始居民
@@ -82,62 +131,16 @@ npm run dev
 | 陈默 | 程序员 | 东北住宅 |
 | 苏晴 | 作家 | 西北住宅 |
 
-## 配置
+## 后续可做
 
-`backend/src/main/resources/application.yml`：
-
-```yaml
-aitown:
-  tick-interval-ms: 5000   # LLM 模式下建议 ≥ 5s
-  minutes-per-tick: 10
-  start-hour: 8
-  start-minute: 0
-
-llm:
-  enabled: true
-  base-url: https://api.openai.com/v1   # 可换成兼容网关
-  api-key: ${LLM_API_KEY:}
-  model: gpt-4o-mini
-  timeout-ms: 15000
-  perception-radius: 3
-```
-
-### 启用真实 LLM
-
-```bash
-# Windows PowerShell
-$env:LLM_API_KEY="sk-..."
-
-# 或在 application.yml 直接填写 llm.api-key
-```
-
-- `llm.enabled=true` 且配置了 `api-key`：走感知 → Prompt → LLM → MOVE/TALK/IDLE  
-- 未配置 key 或 `enabled=false`：自动降级为 Phase 1 Mock 决策  
-- LLM 超时 / 非 JSON：该 Agent 本 Tick 强制 IDLE，模拟不中断  
-
-### 决策 JSON 约定
-
-```json
-{
-  "thought": "内心独白与规划",
-  "action": "MOVE | TALK | IDLE",
-  "targetLocation": "咖啡馆/公园等或null",
-  "targetAgent": "对方名字或null",
-  "speech": "说出的话或null"
-}
-```
-
-TALK 会写入区域事件，**下一 Tick** 附近 Agent 可感知并回应。
-
-## 后续阶段（未实现）
-
-- MySQL + MyBatis-Plus：Agent 档案、记忆流、实验日志  
-- Redis：世界时钟、实时坐标、短期工作记忆  
-- 右侧观察面板：完整 Prompt / Token 消耗明细  
+- Agent 档案表与实验日志持久化  
+- Redis 缓存实时坐标 / 世界时钟  
+- 观察面板展示完整 Prompt / Token  
+- 向量检索替代关键词 Jaccard  
 
 ## 故障排查
 
-- 前端显示「无法连接后端」：确认后端已在 8080 启动  
-- WS 一直断开：检查防火墙 / 代理，开发期前端直连 `ws://localhost:8080/ws/world`  
-- 端口占用：修改 `application.yml` 的 `server.port` 或 Vite `server.port`  
-- Agent 一直 IDLE 且日志报 LLM 失败：检查 `LLM_API_KEY`、`base-url`、网络与模型名
+- 后端起不来：先 `docker compose ps`，确认 3306/6379  
+- 前端连不上：确认后端 8080  
+- Agent 无记忆：需启用 LLM 并成功决策（Mock 模式不写长期记忆）  
+- 反思不触发：累计 `memoryImportance` 需达到阈值 30  

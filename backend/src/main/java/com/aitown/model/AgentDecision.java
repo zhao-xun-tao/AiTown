@@ -35,6 +35,20 @@ public class AgentDecision {
 
     private String speech;
 
+    /**
+     * 本回合要写入长期记忆的一句话（LLM 生成记忆时顺便产出）。
+     */
+    private String memoryNote;
+
+    /** 该记忆重要性 1-10 */
+    private Integer memoryImportance;
+
+    /** OBSERVATION / DIALOGUE（反思由系统触发，不由此字段指定） */
+    private String memoryType;
+
+    /** 对其他居民的印象/好感度更新（可选） */
+    private java.util.List<ImpressionUpdate> impressionUpdates;
+
     /** 解析失败 / 超时等标记，供日志与观察面板使用 */
     @Builder.Default
     private boolean fallback = false;

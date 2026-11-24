@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import ControlBar from './components/ControlBar.vue'
 import TownCanvas from './components/TownCanvas.vue'
 import ObserverPanel from './components/ObserverPanel.vue'
 import { fetchWorldState, pauseSim, startSim, stepSim } from './api/sim'
+import { injectWorldEvent } from './api/events'
 import { useWorldSocket } from './composables/useWorldSocket'
-import type { SimStatus, WorldState } from './types/world'
+import type { SimStatus, WorldEvent, WorldState } from './types/world'
 
 const world = ref<WorldState | null>(null)
 const selectedId = ref<string | null>(null)
@@ -14,6 +15,8 @@ const errorMsg = ref('')
 
 const timeDisplay = ref('—')
 const simStatus = ref<SimStatus>('PAUSED')
+
+const activeEvents = computed<WorldEvent[]>(() => world.value?.activeWorldEvents || [])
 
 function applyState(state: WorldState) {
   world.value = state
@@ -75,6 +78,21 @@ async function onStep() {
   }
 }
 
+async function onInject(content: string) {
+  busy.value = true
+  errorMsg.value = ''
+  try {
+    await injectWorldEvent(content)
+    // 投放后拉一次快照，确保事件条立刻可见
+    const state = await fetchWorldState()
+    applyState(state)
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : '世界事件投放失败'
+  } finally {
+    busy.value = false
+  }
+}
+
 function onSelect(id: string) {
   selectedId.value = id
 }
@@ -87,9 +105,11 @@ function onSelect(id: string) {
       :sim-status="simStatus"
       :connected="connected"
       :busy="busy"
+      :active-events="activeEvents"
       @start="onStart"
       @pause="onPause"
       @step="onStep"
+      @inject="onInject"
     />
 
     <p v-if="errorMsg" class="error-banner">{{ errorMsg }}</p>
@@ -128,7 +148,7 @@ function onSelect(id: string) {
 .body {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 420px;
   min-height: 0;
 }
 
@@ -144,7 +164,7 @@ function onSelect(id: string) {
 @media (max-width: 960px) {
   .body {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(360px, 1fr) 420px;
+    grid-template-rows: minmax(360px, 1fr) 480px;
   }
 
   .side {

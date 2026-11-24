@@ -11,6 +11,8 @@ public class ChatCompletionResponse {
 
     private List<Choice> choices;
 
+    private UsageInfo usage;
+
     public String firstContent() {
         if (choices == null || choices.isEmpty() || choices.get(0).getMessage() == null) {
             return null;
