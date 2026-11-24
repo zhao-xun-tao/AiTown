@@ -90,8 +90,11 @@ function sendEvent() {
 
 <style scoped>
 .bar-wrap {
-  background: linear-gradient(180deg, #2a333c 0%, var(--bg-panel) 100%);
+  background:
+    linear-gradient(180deg, rgba(212, 180, 131, 0.08), transparent 40%),
+    linear-gradient(180deg, #2a3b33 0%, var(--bg-panel) 100%);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
 .bar {
@@ -99,7 +102,7 @@ function sendEvent() {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 16px;
-  padding: 12px 20px 8px;
+  padding: 14px 20px 8px;
 }
 
 .brand {
@@ -109,14 +112,16 @@ function sendEvent() {
 }
 
 .brand-mark {
-  font-weight: 700;
-  font-size: 1.15rem;
+  font-weight: 800;
+  font-size: 1.25rem;
   letter-spacing: 0.02em;
+  color: var(--accent-strong);
 }
 
 .brand-sub {
   color: var(--text-muted);
   font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .clock {
@@ -128,9 +133,10 @@ function sendEvent() {
 
 .clock-label {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .clock-value {
@@ -138,11 +144,13 @@ function sendEvent() {
   font-size: 1.05rem;
   font-weight: 500;
   min-width: 9.5rem;
+  color: var(--text);
 }
 
 .pill {
   font-size: 0.7rem;
-  padding: 2px 8px;
+  font-weight: 700;
+  padding: 3px 9px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   color: var(--text-muted);
@@ -151,16 +159,19 @@ function sendEvent() {
 .pill-run {
   border-color: #4a8f55;
   color: var(--success);
+  background: rgba(125, 190, 122, 0.1);
 }
 
 .pill-pause {
   border-color: #8a6a3a;
   color: var(--warn);
+  background: rgba(224, 164, 95, 0.1);
 }
 
 .pill-ok {
-  border-color: #3d6a8a;
+  border-color: #7a6a45;
   color: var(--accent);
+  background: rgba(212, 180, 131, 0.1);
 }
 
 .pill-off {
@@ -175,71 +186,76 @@ function sendEvent() {
 }
 
 .btn {
-  padding: 7px 14px;
+  padding: 8px 14px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   color: var(--text);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 700;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 
 .btn:hover:not(:disabled) {
   border-color: var(--accent-dim);
-  background: #33404b;
+  background: var(--bg-soft);
+  transform: translateY(-1px);
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btn-primary {
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, #c9a86a, var(--accent-dim));
   border-color: var(--accent);
+  color: #1a2018;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent);
-  color: #0f1418;
+  background: linear-gradient(180deg, #e0bf7e, #c9a86a);
+  color: #1a2018;
 }
 
 .god-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 20px 12px;
+  padding: 8px 20px 14px;
   flex-wrap: wrap;
 }
 
 .god-label {
   font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--warn);
+  color: var(--accent);
   white-space: nowrap;
 }
 
 .god-input {
   flex: 1;
   min-width: 220px;
-  padding: 8px 12px;
+  padding: 9px 12px;
   border: 1px solid var(--border);
-  background: #1b2228;
+  background: rgba(15, 25, 20, 0.55);
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 0.85rem;
+  font-weight: 600;
   outline: none;
 }
 
 .god-input:focus {
-  border-color: var(--warn);
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 0 3px rgba(212, 180, 131, 0.15);
 }
 
 .btn-god {
-  background: #6a4a2a;
-  border-color: var(--warn);
-  color: #f0d9b5;
+  background: rgba(168, 137, 85, 0.25);
+  border-color: var(--accent-dim);
+  color: var(--accent-strong);
 }
 
 .god-active {
@@ -251,10 +267,11 @@ function sendEvent() {
 
 .event-chip {
   font-size: 0.72rem;
-  padding: 3px 8px;
-  background: #3a2e1f;
-  border: 1px solid #8a6a3a;
-  color: #e8d4b0;
+  font-weight: 600;
+  padding: 4px 9px;
+  background: rgba(80, 55, 25, 0.45);
+  border: 1px solid rgba(212, 180, 131, 0.35);
+  color: #f0e2c4;
 }
 
 .event-chip em {

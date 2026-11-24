@@ -14,9 +14,8 @@ export function useWorldSocket(onState: (state: WorldState) => void) {
 
   function wsUrl(): string {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-    // 开发期直连后端 8080；生产可改为同源反代
-    const host = import.meta.env.DEV ? 'localhost:8080' : location.host
-    return `${proto}://${host}/ws/world`
+    // 开发期走 Vite 代理 /ws → 8080，避免直连卡顿与跨域
+    return `${proto}://${location.host}/ws/world`
   }
 
   function connect() {

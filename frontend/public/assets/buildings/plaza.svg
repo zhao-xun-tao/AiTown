@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <pattern id="stone" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect width="32" height="32" fill="#d8c7a1"/>
+      <rect x="0" y="0" width="15" height="15" fill="#e2d3b0" stroke="#b89f72" stroke-width="1"/>
+      <rect x="17" y="0" width="15" height="15" fill="#cdb892" stroke="#b89f72" stroke-width="1"/>
+      <rect x="0" y="17" width="15" height="15" fill="#c6b087" stroke="#b89f72" stroke-width="1"/>
+      <rect x="17" y="17" width="15" height="15" fill="#d4c29a" stroke="#b89f72" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#stone)"/>
+  <!-- fountain basin -->
+  <circle cx="128" cy="128" r="58" fill="#6a9eb8" opacity="0.85"/>
+  <circle cx="128" cy="128" r="46" fill="#7eb6d4"/>
+  <circle cx="128" cy="128" r="28" fill="#9fd0ea"/>
+  <circle cx="128" cy="128" r="10" fill="#e8f6fc"/>
+  <rect x="124" y="70" width="8" height="40" fill="#dfeaf0"/>
+  <circle cx="128" cy="68" r="8" fill="#e8f6fc"/>
+  <!-- benches around -->
+  <rect x="40" y="110" width="12" height="36" rx="2" fill="#8b5a2b"/>
+  <rect x="204" y="110" width="12" height="36" rx="2" fill="#8b5a2b"/>
+  <rect x="110" y="40" width="36" height="12" rx="2" fill="#8b5a2b"/>
+  <rect x="110" y="204" width="36" height="12" rx="2" fill="#8b5a2b"/>
+</svg>

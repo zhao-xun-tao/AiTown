@@ -1,16 +1,20 @@
 :root {
-  --bg-deep: #1a1f24;
-  --bg-panel: #232a31;
-  --bg-elevated: #2c353e;
-  --border: #3a4550;
-  --text: #e8eef2;
-  --text-muted: #9aa8b5;
-  --accent: #5b9fd4;
-  --accent-dim: #3d7aab;
-  --success: #6fbf73;
+  --bg-deep: #1a2620;
+  --bg-panel: #22302a;
+  --bg-elevated: #2c3d35;
+  --bg-soft: #334840;
+  --border: #3f564a;
+  --border-soft: rgba(196, 176, 140, 0.22);
+  --text: #f2eee6;
+  --text-muted: #a8b5ad;
+  --accent: #d4b483;
+  --accent-dim: #a88955;
+  --accent-strong: #e8c98a;
+  --success: #7dbe7a;
   --warn: #e0a45f;
-  --danger: #d96b6b;
-  --font-ui: 'DM Sans', system-ui, sans-serif;
+  --danger: #d97a6b;
+  --ink: #14201a;
+  --font-ui: 'Nunito', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
@@ -33,4 +37,8 @@ body,
 button {
   font-family: inherit;
   cursor: pointer;
+}
+
+::selection {
+  background: rgba(212, 180, 131, 0.35);
 }

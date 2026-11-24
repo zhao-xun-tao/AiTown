@@ -16,6 +16,8 @@ import {
 const props = defineProps<{
   world: WorldState | null
   selectedId: string | null
+  /** 后端已同步前不打记忆/CoT 接口，避免空等拖慢首屏 */
+  observabilityEnabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -58,8 +60,17 @@ async function refreshObservability(agentId: string) {
 }
 
 watch(
-  () => [props.selectedId, props.world?.gameTime?.tick] as const,
-  ([id]) => {
+  () =>
+    [props.selectedId, props.world?.gameTime?.tick, props.observabilityEnabled] as const,
+  ([id, , enabled]) => {
+    if (!enabled) {
+      working.value = []
+      longTerm.value = []
+      cotLogs.value = []
+      relations.value = []
+      loadError.value = ''
+      return
+    }
     if (id) refreshObservability(id)
     else {
       working.value = []
@@ -295,9 +306,12 @@ function favorColor(v: number) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-panel);
+  background:
+    linear-gradient(180deg, rgba(212, 180, 131, 0.06), transparent 120px),
+    var(--bg-panel);
   border-left: 1px solid var(--border);
   overflow: hidden;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
 }
 
 .panel-head {
@@ -308,7 +322,8 @@ function favorColor(v: number) {
 .panel-head h2 {
   margin: 0;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 800;
+  color: var(--accent-strong);
 }
 
 .hint,
@@ -361,16 +376,19 @@ h4.mt {
   grid-template-columns: 10px 1fr auto auto;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
-  background: var(--bg-elevated);
+  padding: 8px 10px;
+  background: rgba(15, 25, 20, 0.35);
   border: 1px solid transparent;
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .agent-list li:hover,
 .agent-list li.active {
   border-color: var(--accent-dim);
+  background: rgba(212, 180, 131, 0.1);
 }
 
 .dot {
@@ -410,7 +428,7 @@ h4.mt {
 }
 
 .tabs button.on {
-  color: var(--text);
+  color: var(--accent-strong);
   border-bottom-color: var(--accent);
 }
 
@@ -483,13 +501,13 @@ h4.mt {
 .thought {
   margin: 0;
   padding: 10px;
-  background: #1b2228;
+  background: rgba(15, 25, 20, 0.55);
   border: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   white-space: pre-wrap;
   line-height: 1.45;
-  color: #c5d4e0;
+  color: #d8e6dc;
 }
 
 .err {
@@ -505,8 +523,9 @@ h4.mt {
 .cot-card {
   margin-bottom: 12px;
   padding: 10px;
-  background: #1b2228;
+  background: rgba(15, 25, 20, 0.45);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-dim);
 }
 
 .cot-head {
@@ -535,9 +554,9 @@ h4.mt {
 
 .step-label {
   font-size: 0.7rem;
-  color: var(--accent);
+  color: var(--accent-strong);
   margin-bottom: 4px;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .step-body {
@@ -583,7 +602,7 @@ h4.mt {
 
 .mem-list li {
   padding: 8px 10px;
-  background: #1b2228;
+  background: rgba(15, 25, 20, 0.45);
   border: 1px solid var(--border);
   font-size: 0.8rem;
   line-height: 1.4;
@@ -624,7 +643,7 @@ h4.mt {
 .rel-card {
   padding: 10px;
   margin-bottom: 10px;
-  background: #1b2228;
+  background: rgba(15, 25, 20, 0.45);
   border: 1px solid var(--border);
 }
 
@@ -641,7 +660,7 @@ h4.mt {
 
 .bar-track {
   height: 6px;
-  background: #2c353e;
+  background: rgba(15, 25, 20, 0.65);
   margin-bottom: 8px;
 }
 

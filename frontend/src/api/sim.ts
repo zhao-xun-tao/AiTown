@@ -1,44 +1,20 @@
-import type { ApiResult, WorldState } from '../types/world'
+import type { WorldState } from '../types/world'
+import { getJson, postJson } from './http'
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' }
-
-async function post<T>(url: string): Promise<T> {
-  const res = await fetch(url, { method: 'POST', headers: JSON_HEADERS })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
-  const body = (await res.json()) as ApiResult<T>
-  if (body.code !== 0) {
-    throw new Error(body.message || '请求失败')
-  }
-  return body.data
-}
-
-async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
-  const body = (await res.json()) as ApiResult<T>
-  if (body.code !== 0) {
-    throw new Error(body.message || '请求失败')
-  }
-  return body.data
-}
-
-/** 拉取完整世界快照 */
+/** 拉取完整世界快照（8s 超时） */
 export function fetchWorldState() {
-  return get<WorldState>('/api/world/state')
+  return getJson<WorldState>('/api/world/state', 8000)
 }
 
 export function startSim() {
-  return post<Record<string, unknown>>('/api/sim/start')
+  return postJson<Record<string, unknown>>('/api/sim/start', 10000)
 }
 
 export function pauseSim() {
-  return post<Record<string, unknown>>('/api/sim/pause')
+  return postJson<Record<string, unknown>>('/api/sim/pause', 10000)
 }
 
 export function stepSim() {
-  return post<WorldState>('/api/sim/step')
+  // LLM 单步可能较慢
+  return postJson<WorldState>('/api/sim/step', 60000)
 }

@@ -6,14 +6,18 @@ import ObserverPanel from './components/ObserverPanel.vue'
 import { fetchWorldState, pauseSim, startSim, stepSim } from './api/sim'
 import { injectWorldEvent } from './api/events'
 import { useWorldSocket } from './composables/useWorldSocket'
+import { createSkeletonWorld } from './data/skeletonWorld'
 import type { SimStatus, WorldEvent, WorldState } from './types/world'
 
-const world = ref<WorldState | null>(null)
-const selectedId = ref<string | null>(null)
+/** 首屏立刻用骨架地图，避免干等「唤醒小镇」 */
+const world = ref<WorldState | null>(createSkeletonWorld())
+const selectedId = ref<string | null>('agent-linyue')
 const busy = ref(false)
 const errorMsg = ref('')
+const syncing = ref(true)
+const synced = ref(false)
 
-const timeDisplay = ref('—')
+const timeDisplay = ref('连接中…')
 const simStatus = ref<SimStatus>('PAUSED')
 
 const activeEvents = computed<WorldEvent[]>(() => world.value?.activeWorldEvents || [])
@@ -22,21 +26,39 @@ function applyState(state: WorldState) {
   world.value = state
   timeDisplay.value = state.timeDisplay
   simStatus.value = state.simStatus
+  synced.value = true
+  syncing.value = false
+  errorMsg.value = ''
   if (!selectedId.value && state.agents.length > 0) {
     selectedId.value = state.agents[0].id
   }
 }
 
-const { connected } = useWorldSocket(applyState)
+const { connected } = useWorldSocket((state) => {
+  // 只有真正连上并收到快照后才覆盖骨架
+  applyState(state)
+})
 
-onMounted(async () => {
+async function loadWorld(retry = 0) {
+  syncing.value = true
   try {
     const state = await fetchWorldState()
     applyState(state)
   } catch (e) {
-    errorMsg.value = e instanceof Error ? e.message : '无法连接后端'
+    const msg = e instanceof Error ? e.message : '无法连接后端'
+    if (retry < 2) {
+      // 后端冷启动时多试两次
+      await new Promise((r) => setTimeout(r, 800 * (retry + 1)))
+      return loadWorld(retry + 1)
+    }
+    errorMsg.value = msg + '（已显示本地预览地图，启动后端后会自动同步）'
+    syncing.value = false
     console.error(e)
   }
+}
+
+onMounted(() => {
+  void loadWorld()
 })
 
 async function onStart() {
@@ -83,7 +105,6 @@ async function onInject(content: string) {
   errorMsg.value = ''
   try {
     await injectWorldEvent(content)
-    // 投放后拉一次快照，确保事件条立刻可见
     const state = await fetchWorldState()
     applyState(state)
   } catch (e) {
@@ -96,6 +117,10 @@ async function onInject(content: string) {
 function onSelect(id: string) {
   selectedId.value = id
 }
+
+function onRetry() {
+  void loadWorld()
+}
 </script>
 
 <template>
@@ -104,7 +129,7 @@ function onSelect(id: string) {
       :time-display="timeDisplay"
       :sim-status="simStatus"
       :connected="connected"
-      :busy="busy"
+      :busy="busy || syncing"
       :active-events="activeEvents"
       @start="onStart"
       @pause="onPause"
@@ -112,16 +137,28 @@ function onSelect(id: string) {
       @inject="onInject"
     />
 
-    <p v-if="errorMsg" class="error-banner">{{ errorMsg }}</p>
+    <p v-if="errorMsg" class="error-banner">
+      {{ errorMsg }}
+      <button class="retry" type="button" @click="onRetry">重试同步</button>
+    </p>
+    <p v-else-if="syncing && !synced" class="sync-banner">
+      正在同步后端世界状态…
+    </p>
 
     <div class="body">
       <main class="stage">
-        <TownCanvas :world="world" :selected-id="selectedId" @select="onSelect" />
+        <TownCanvas
+          :world="world"
+          :selected-id="selectedId"
+          :syncing="syncing && !synced"
+          @select="onSelect"
+        />
       </main>
       <ObserverPanel
         class="side"
         :world="world"
         :selected-id="selectedId"
+        :observability-enabled="synced"
         @select="onSelect"
       />
     </div>
@@ -136,20 +173,44 @@ function onSelect(id: string) {
   min-height: 100vh;
 }
 
-.error-banner {
+.error-banner,
+.sync-banner {
   margin: 0;
   padding: 8px 20px;
-  background: #4a2a2a;
-  color: #f0c0c0;
   font-size: 0.85rem;
-  border-bottom: 1px solid #6a3a3a;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-banner {
+  background: rgba(90, 35, 30, 0.9);
+  color: #f0c0c0;
+  border-bottom-color: #8a4a4a;
+}
+
+.sync-banner {
+  background: rgba(40, 55, 42, 0.95);
+  color: var(--accent-strong);
+}
+
+.retry {
+  border: 1px solid #c08080;
+  background: rgba(0, 0, 0, 0.2);
+  color: #f0c0c0;
+  padding: 3px 10px;
+  font-weight: 700;
+  font-size: 0.8rem;
 }
 
 .body {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr minmax(360px, 420px);
   min-height: 0;
+  background: var(--bg-deep);
 }
 
 .stage {

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="128" viewBox="0 0 96 128">
+  <ellipse cx="48" cy="120" rx="22" ry="6" fill="#000" opacity="0.22"/>
+  <rect x="34" y="90" width="10" height="24" rx="3" fill="#4a3a48"/>
+  <rect x="52" y="90" width="10" height="24" rx="3" fill="#4a3a48"/>
+  <!-- dress -->
+  <path d="M28 58 L68 58 L74 96 L22 96 Z" fill="#81B29A"/>
+  <rect x="34" y="56" width="28" height="20" rx="6" fill="#6fa08a"/>
+  <rect x="18" y="60" width="12" height="28" rx="6" fill="#f0c8a8"/>
+  <rect x="66" y="60" width="12" height="28" rx="6" fill="#f0c8a8"/>
+  <!-- notebook -->
+  <rect x="70" y="72" width="14" height="18" rx="1" fill="#f7f1e4" stroke="#5a4a3a" stroke-width="1"/>
+  <path d="M73 76 H81 M73 80 H81 M73 84 H78" stroke="#a89070" stroke-width="1"/>
+  <circle cx="48" cy="34" r="22" fill="#f3d2b3"/>
+  <!-- long hair -->
+  <path d="M24 38 Q26 8 48 6 Q70 8 72 38 L74 78 Q60 70 48 72 Q36 70 22 78 Z" fill="#5c3d2e"/>
+  <path d="M30 28 Q48 18 66 28 Q64 14 48 12 Q32 14 30 28 Z" fill="#6b4a38"/>
+  <circle cx="40" cy="36" r="2.2" fill="#2a2218"/>
+  <circle cx="56" cy="36" r="2.2" fill="#2a2218"/>
+  <path d="M42 46 Q48 51 54 46" fill="none" stroke="#c47a6a" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="34" cy="42" r="3.5" fill="#f0a090" opacity="0.5"/>
+  <circle cx="62" cy="42" r="3.5" fill="#f0a090" opacity="0.5"/>
+</svg>

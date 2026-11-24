@@ -6,9 +6,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // 开发期将 REST 代理到 Spring Boot，避免跨域折腾
+      // 开发期将 REST / WS 代理到 Spring Boot
       '/api': {
         target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:8080',
+        ws: true,
         changeOrigin: true,
       },
     },

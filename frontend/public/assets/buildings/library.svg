@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="230" viewBox="0 0 280 230">
+  <ellipse cx="140" cy="218" rx="115" ry="10" fill="#1a2a1c" opacity="0.25"/>
+  <rect x="28" y="90" width="224" height="118" fill="#e8eef4"/>
+  <!-- pediment -->
+  <path d="M14 96 L140 20 L266 96 Z" fill="#3d5a80"/>
+  <path d="M40 96 L140 40 L240 96 Z" fill="#4a6f98"/>
+  <!-- columns -->
+  <rect x="48" y="100" width="18" height="108" fill="#d5dde8"/>
+  <rect x="131" y="100" width="18" height="108" fill="#d5dde8"/>
+  <rect x="214" y="100" width="18" height="108" fill="#d5dde8"/>
+  <rect x="44" y="96" width="26" height="10" fill="#c5cedc"/>
+  <rect x="127" y="96" width="26" height="10" fill="#c5cedc"/>
+  <rect x="210" y="96" width="26" height="10" fill="#c5cedc"/>
+  <!-- windows -->
+  <rect x="78" y="118" width="40" height="70" fill="#8eb8d8" stroke="#2f4663" stroke-width="3"/>
+  <rect x="162" y="118" width="40" height="70" fill="#8eb8d8" stroke="#2f4663" stroke-width="3"/>
+  <path d="M98 118 V188 M78 141 H118 M78 164 H118" stroke="#2f4663" stroke-width="2"/>
+  <path d="M182 118 V188 M162 141 H202 M162 164 H202" stroke="#2f4663" stroke-width="2"/>
+  <!-- door -->
+  <path d="M124 155 h32 v53 h-32 z" fill="#3d2a1c"/>
+  <path d="M124 155 h32 v53" fill="none" stroke="#2a1c12" stroke-width="2"/>
+  <circle cx="148" cy="185" r="2" fill="#d4b483"/>
+</svg>
