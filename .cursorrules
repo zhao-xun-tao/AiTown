@@ -1,0 +1,23 @@
+# Project: AI Town - 多智能体社会模拟沙盒 (Generative Agents Sandbox)
+
+## 1. 项目定位
+这是一个用于 AI 游戏研究的 Web 端多智能体社会模拟沙盒。核心目标不仅是展示 2D 小镇动画，更强调**研究可观测性（Observability）**——能够清晰查看每个 AI Agent 的内部状态、记忆检索、思考推理过程（Chain of Thought）、Prompt 详情及 Token 消耗。
+
+## 2. 强制技术栈规范
+### 后端 (`/backend`)
+- 语言与框架: Java 17+, Spring Boot 3.x
+- ORM: MyBatis-Plus
+- 数据库: MySQL 8.0 (持久化存储 Agent 档案、历史记忆流、实验日志)
+- 缓存与实时状态: Redis (存储当前小镇世界时钟、Agent 实时坐标、短期工作记忆、会话状态)
+- 实时通信: WebSocket (将每一帧/每一回合的世界状态与 Agent 思考日志推送到前端)
+- 大模型接入: 使用标准 OpenAI 兼容格式 HTTP 客户端调用 LLM API（支持在 `application.yml` 中配置 `base-url`、`api-key`、`model`）
+
+### 前端 (`/frontend`)
+- 框架: Vue 3 (Composition API `<script setup>`) + TypeScript + Vite
+- 渲染引擎: 原生 HTML5 Canvas 2D (绘制 2D 网格小镇地图、建筑物、Agent 移动平滑插值、头顶气泡对话)
+- UI 布局: 左右分栏或三栏研究工作台风格（左侧/主视图为 2D 小镇 Canvas，右侧为 Agent 详情与记忆/思考实时观察面板，顶部为世界时钟与模拟控制栏：播放/暂停/单步执行/倍速）
+
+## 3. 代码与工程规范
+- 前后端彻底分离，所有接口返回统一 JSON 结构 (`Result<T>`)。
+- LLM 输出必须强制要求返回严格的 JSON 格式（包含 `thought` 思考过程、`action` 动作类型、`target` 目标、`speech` 对话内容），并在后端做好 JSON 解析容错与兜底机制，绝不能因为大模型格式微瑕导致模拟循环崩溃。
+- 关键业务和 Agent 决策链路必须保留清晰的中文注释。
